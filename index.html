@@ -91,16 +91,15 @@ textarea{
 .stop{background:#dc3545;}
 
 .actions{
-  display:flex;
-  justify-content:space-between;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
   gap:10px;
   margin-top:15px;
-  flex-wrap:wrap;
 }
 
 .actions button{
-  flex:1;
-  padding:10px;
+  width:100%;
+  padding:12px;
   border:none;
   border-radius:10px;
   color:white;
@@ -111,11 +110,13 @@ textarea{
 .copy{background:#007bff;}
 .clear{background:#6c757d;}
 .download{background:#ff9800;}
+.pdf{background:#e91e63;}
 .newline{background:#9c27b0;}
 
-@media(max-width:480px){
-  textarea{height:180px}
-  .mic-btn{width:60px;height:60px;font-size:18px;}
+@media(min-width:500px){
+  .actions{
+    grid-template-columns:repeat(3,1fr);
+  }
 }
 </style>
 </head>
@@ -150,9 +151,13 @@ textarea{
     <button class="copy" onclick="copyText()">Copy</button>
     <button class="clear" onclick="clearText()">Clear</button>
     <button class="download" onclick="downloadWord()">Word</button>
+    <button class="pdf" onclick="downloadPDF()">PDF</button>
   </div>
 
 </div>
+
+<!-- PDF LIB -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 let recognition;
@@ -184,7 +189,7 @@ if ('webkitSpeechRecognition' in window) {
 
       if (event.results[i].isFinal) {
         finalTranscript += transcript + ' ';
-        lastProcessedIndex = i + 1; // ✅ mobile duplicate fix
+        lastProcessedIndex = i + 1;
       } else {
         interimTranscript += transcript;
       }
@@ -237,7 +242,6 @@ function clearText() {
 
 function downloadWord() {
   let text = textarea.value;
-
   let blob = new Blob(['\ufeff', text], { type: 'application/msword' });
   let url = URL.createObjectURL(blob);
 
@@ -245,6 +249,17 @@ function downloadWord() {
   a.href = url;
   a.download = "voice-text.doc";
   a.click();
+}
+
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const text = textarea.value;
+  const lines = doc.splitTextToSize(text, 180);
+
+  doc.text(lines, 10, 10);
+  doc.save("voice-text.pdf");
 }
 </script>
 
