@@ -10,8 +10,8 @@
 
 body{
   margin:0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg,#4facfe,#00f2fe);
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#4facfe,#00f2fe);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -30,10 +30,7 @@ body{
   flex-direction:column;
 }
 
-h2{
-  text-align:center;
-  margin:5px 0 15px;
-}
+h2{text-align:center;margin:5px 0 15px;}
 
 .top-controls{
   display:flex;
@@ -114,6 +111,7 @@ textarea{
 .copy{background:#007bff;}
 .clear{background:#6c757d;}
 .download{background:#ff9800;}
+.newline{background:#9c27b0;}
 
 @media(max-width:480px){
   textarea{height:180px}
@@ -148,6 +146,7 @@ textarea{
   </div>
 
   <div class="actions">
+    <button class="newline" onclick="addNewLine()">Next Line</button>
     <button class="copy" onclick="copyText()">Copy</button>
     <button class="clear" onclick="clearText()">Clear</button>
     <button class="download" onclick="downloadWord()">Word</button>
@@ -161,36 +160,35 @@ let isListening = false;
 let finalTranscript = '';
 
 if ('webkitSpeechRecognition' in window) {
+
   recognition = new webkitSpeechRecognition();
   recognition.continuous = true;
   recognition.interimResults = true;
 
   recognition.onresult = function(event) {
+
     let interimTranscript = '';
 
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+
+      let transcript = event.results[i][0].transcript;
+
       if (event.results[i].isFinal) {
-        finalTranscript += event.results[i][0].transcript + ' ';
+        finalTranscript += transcript + ' ';
       } else {
-        interimTranscript += event.results[i][0].transcript;
+        interimTranscript += transcript;
       }
     }
 
     document.getElementById('output').value = finalTranscript + interimTranscript;
   };
 
-  recognition.onerror = function(event) {
-    alert("Error: " + event.error);
-  };
-
   recognition.onend = function() {
-    if (isListening) {
-      recognition.start();
-    }
+    if (isListening) recognition.start();
   };
 
 } else {
-  alert("Use Chrome browser for voice recognition.");
+  alert("Use Chrome browser");
 }
 
 function startRecognition() {
@@ -206,6 +204,11 @@ function stopRecognition() {
   document.getElementById('status').style.display = 'none';
 }
 
+function addNewLine() {
+  finalTranscript += '\n';
+  document.getElementById('output').value = finalTranscript;
+}
+
 function copyText() {
   let text = document.getElementById('output');
   text.select();
@@ -213,8 +216,8 @@ function copyText() {
 }
 
 function clearText() {
-  document.getElementById('output').value = '';
   finalTranscript = '';
+  document.getElementById('output').value = '';
 }
 
 function downloadWord() {
@@ -222,6 +225,7 @@ function downloadWord() {
 
   let blob = new Blob(['\ufeff', text], { type: 'application/msword' });
   let url = URL.createObjectURL(blob);
+
   let a = document.createElement("a");
   a.href = url;
   a.download = "voice-text.doc";
