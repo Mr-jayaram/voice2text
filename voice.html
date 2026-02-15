@@ -1,120 +1,1140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Continuous Voice to Text</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-body {
-    font-family: Arial;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-}
-.container {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    width: 420px;
-    text-align: center;
-}
-textarea {
-    width: 100%;
-    height: 150px;
-    font-size: 16px;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-button {
-    padding: 10px 15px;
-    margin: 5px;
-    border: none;
-    border-radius: 8px;
-    background: #667eea;
-    color: white;
-    cursor: pointer;
-}
-.status {
-    font-size: 14px;
-    color: #555;
-}
-</style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px 30px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .mic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+        }
+
+        .mic-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .mic-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .mic-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .mic-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .stop-button {
+            padding: 12px 28px;
+            background: #f5576c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 140px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .stop-button.show {
+            display: block;
+        }
+
+        .stop-button:hover:not(:disabled) {
+            background: #d63447;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        }
+
+        .stop-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .stop-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .speech-ended-buttons {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .speech-ended-buttons.show {
+            display: flex;
+        }
+
+        .continue-btn, .new-recording-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+
+        .continue-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .continue-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5568d3 0%, #64398e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .new-recording-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .new-recording-btn:hover:not(:disabled) {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .continue-btn:active:not(:disabled),
+        .new-recording-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mic-button.listening {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 30px rgba(245, 87, 108, 0.8);
+            }
+        }
+
+        .status {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            height: 20px;
+            min-height: 20px;
+        }
+
+        .status.idle {
+            color: #999;
+        }
+
+        .status.listening {
+            color: #f5576c;
+            animation: blink 1.5s infinite;
+        }
+
+        .status.processing {
+            color: #667eea;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .text-display {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        .text-display.has-text {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .text-display-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .text-content {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            outline: none;
+            width: 100%;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            resize: none;
+            min-height: 60px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .text-content.empty {
+            color: #bbb;
+            font-style: italic;
+        }
+
+        .text-content:focus {
+            outline: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-copy {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-copy:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-copy:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-nextline {
+            background: #26a65b;
+            color: white;
+        }
+
+        .btn-nextline:hover:not(:disabled) {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .btn-nextline:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-download-word {
+            background: #2980b9;
+            color: white;
+        }
+
+        .btn-download-word:hover:not(:disabled) {
+            background: #1f618d;
+            transform: translateY(-2px);
+        }
+
+        .btn-download-word:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-download-pdf {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-download-pdf:hover:not(:disabled) {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-download-pdf:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover:not(:disabled) {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: slideUpToast 0.3s ease, slideDownToast 0.3s ease 2.7s;
+            z-index: 1000;
+        }
+
+        @keyframes slideUpToast {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes slideDownToast {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+        }
+
+        .error {
+            background: #f5576c !important;
+        }
+
+        .success {
+            background: #26a65b !important;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .mic-button {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+
+            .text-display {
+                min-height: 80px;
+                max-height: 250px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>🎤 Voice to Text</h1>
+        <p class="subtitle">Tap to speak, watch it transcribe</p>
 
-<div class="container">
-    <h3>🎤 Voice → Text</h3>
+        <div class="mic-section">
+            <div class="button-container">
+                <div class="mic-controls">
+                    <button class="mic-button" id="micButton" aria-label="Start recording">
+                        🎙️
+                    </button>
+                    <button class="stop-button" id="stopButton" aria-label="Stop listening">
+                        ⏹️ STOP
+                    </button>
+                </div>
+            </div>
+            <div class="speech-ended-buttons" id="speechEndedButtons">
+                <button class="new-recording-btn" id="newRecordingBtn">
+                    🔄 NEW RECORDING
+                </button>
+            </div>
+            <div class="status idle" id="status">Tap to start listening (Continuous Mode)</div>
+            <div class="status idle" id="speakingTime"></div>
+        </div>
 
-    <textarea id="output" placeholder="Start speaking..."></textarea>
+        <div class="text-display" id="textDisplay">
+            <div class="text-display-label">Transcribed Text</div>
+            <textarea class="text-content empty" id="textContent" placeholder="Your text will appear here..."></textarea>
+        </div>
 
-    <select id="language">
-        <option value="en-US">English</option>
-        <option value="ta-IN">Tamil</option>
-    </select>
+        <div class="button-group">
+            <button class="btn btn-nextline" id="nextLineBtn" disabled>📝 Next Line</button>
+            <button class="btn btn-copy" id="copyBtn" disabled>📋 Copy</button>
+        </div>
 
-    <br>
+        <div class="button-group">
+            <button class="btn btn-download-word" id="downloadWordBtn" disabled>📄 Word</button>
+            <button class="btn btn-download-pdf" id="downloadPdfBtn" disabled>📕 PDF</button>
+            <button class="btn btn-clear" id="clearBtn" disabled>🗑️ Clear</button>
+        </div>
+    </div>
 
-    <button onclick="startListening()">Start</button>
-    <button onclick="stopListening()">Stop</button>
+    <script>
+        // ============================================
+        // STATE MANAGEMENT - Critical for preventing bugs
+        // ============================================
+        const state = {
+            isListening: false,
+            recognition: null,
+            transcript: '',
+            isFinalTranscript: false,
+            lastEventTime: 0,
+            mode: 'continuous', // Always continuous mode
+            manualStop: false, // Track if user manually stopped
+            speakingStartTime: null, // Track when speech started
+            speakingTimer: null, // Timer interval
+            totalSpeakingTime: 0, // Total speaking time in seconds
+        };
 
-    <p class="status" id="status">Idle</p>
-</div>
-
-<script>
-let recognition;
-let finalTranscript = "";
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true; // ✅ Live text
-} else {
-    alert("Speech Recognition not supported");
-}
-
-function startListening() {
-    finalTranscript = "";
-    recognition.lang = document.getElementById("language").value;
-    recognition.start();
-    document.getElementById("status").innerText = "Listening...";
-}
-
-function stopListening() {
-    recognition.stop();
-    document.getElementById("status").innerText = "Stopped";
-}
-
-recognition.onresult = function (event) {
-    let interimTranscript = "";
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-
-        const transcript = event.results[i][0].transcript;
-
-        if (event.results[i].isFinal) {
-            finalTranscript += transcript + " ";
-        } else {
-            interimTranscript += transcript;
+        // ============================================
+        // TIMER FUNCTIONS
+        // ============================================
+        function startTimer() {
+            state.speakingStartTime = Date.now();
+            if (state.speakingTimer) clearInterval(state.speakingTimer);
+            
+            state.speakingTimer = setInterval(() => {
+                if (state.isListening && state.speakingStartTime) {
+                    const elapsed = Math.floor((Date.now() - state.speakingStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    const speakingTimeEl = document.getElementById('speakingTime');
+                    if (speakingTimeEl) {
+                        speakingTimeEl.textContent = `Speaking time: ${timeStr}`;
+                        speakingTimeEl.style.color = '#667eea';
+                        speakingTimeEl.style.fontSize = '12px';
+                    }
+                }
+            }, 1000);
         }
-    }
 
-    document.getElementById("output").value =
-        finalTranscript + interimTranscript;
-};
+        function stopTimer() {
+            if (state.speakingTimer) {
+                clearInterval(state.speakingTimer);
+                state.speakingTimer = null;
+            }
+            const speakingTimeEl = document.getElementById('speakingTime');
+            if (speakingTimeEl) {
+                speakingTimeEl.textContent = '';
+            }
+        }
 
-recognition.onerror = function (event) {
-    document.getElementById("status").innerText = "Error: " + event.error;
-};
+        // ============================================
+        // DOWNLOAD FUNCTIONS
+        // ============================================
+        function downloadAsWord() {
+            const text = document.getElementById('textContent').value.trim();
+            if (!text) {
+                showToast('No text to download', 'error');
+                return;
+            }
 
-recognition.onend = function () {
-    document.getElementById("status").innerText = "Stopped";
-};
-</script>
+            // Create HTML content for Word document
+            const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <title>Voice to Text Document</title>
+                </head>
+                <body>
+                    <h1>Voice to Text Transcription</h1>
+                    <p>Generated on: ${new Date().toLocaleString()}</p>
+                    <hr>
+                    <p style='white-space: pre-wrap; font-family: Arial, sans-serif;'>${escapeHtml(text)}</p>
+                </body>
+                </html>
+            `;
 
+            const blob = new Blob([htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `transcription_${new Date().getTime()}.doc`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast('Word document downloaded!', 'success');
+        }
+
+        function downloadAsPDF() {
+            const text = document.getElementById('textContent').value.trim();
+            if (!text) {
+                showToast('No text to download', 'error');
+                return;
+            }
+
+            // Create a simple PDF-like document using a library approach
+            // We'll use a data URL approach for PDF
+            const pdfContent = createSimplePDF(text);
+            const blob = new Blob([pdfContent], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `transcription_${new Date().getTime()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast('PDF downloaded!', 'success');
+        }
+
+        function createSimplePDF(text) {
+            // Using jsPDF CDN to create PDF
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                const element = document.createElement('div');
+                element.style.padding = '20px';
+                element.innerHTML = `
+                    <h1>Voice to Text Transcription</h1>
+                    <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+                    <hr>
+                    <p style='white-space: pre-wrap; font-family: Arial, sans-serif;'>${escapeHtml(text)}</p>
+                `;
+
+                const opt = {
+                    margin: 10,
+                    filename: `transcription_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+
+                html2pdf().set(opt).from(element).save();
+            };
+
+            // Fallback: return empty string if library not loaded
+            return '';
+        }
+
+        // Alternative PDF download using canvas
+        function downloadAsPDFAlt() {
+            const text = document.getElementById('textContent').value.trim();
+            if (!text) {
+                showToast('No text to download', 'error');
+                return;
+            }
+
+            // Load jsPDF library
+            const script1 = document.createElement('script');
+            script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            
+            script1.onload = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(16);
+                doc.text('Voice to Text Transcription', 20, 20);
+                
+                doc.setFontSize(10);
+                doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+                
+                doc.line(20, 35, 190, 35);
+                
+                doc.setFontSize(11);
+                const lines = doc.splitTextToSize(text, 170);
+                doc.text(lines, 20, 45);
+                
+                doc.save(`transcription_${new Date().getTime()}.pdf`);
+                showToast('PDF downloaded!', 'success');
+            };
+
+            document.head.appendChild(script1);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function addNextLine() {
+            const textContent = document.getElementById('textContent');
+            const currentText = textContent.value;
+            
+            if (currentText && !currentText.endsWith('\n')) {
+                textContent.value = currentText + '\n';
+                state.transcript = textContent.value;
+                textContent.scrollTop = textContent.scrollHeight;
+                showToast('New line added', 'success');
+                updateUI();
+            }
+        }
+        function initializeSpeechRecognition() {
+            // Only initialize once
+            if (state.recognition) return state.recognition;
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                showToast('Speech Recognition not supported in your browser', 'error');
+                return null;
+            }
+
+            const recognition = new SpeechRecognition();
+
+            // Configure recognition
+            recognition.continuous = false; // Stop after speech ends
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            // ============================================
+            // EVENT HANDLERS - Prevent duplicates
+            // ============================================
+            recognition.onstart = () => {
+                state.isListening = true;
+                state.isFinalTranscript = false;
+                startTimer();
+                updateUI();
+            };
+
+            recognition.onresult = (event) => {
+                // Prevent rapid duplicate processing
+                const now = Date.now();
+                if (now - state.lastEventTime < 100) return;
+                state.lastEventTime = now;
+
+                let interimTranscript = '';
+                let newFinalTranscript = '';
+
+                // Process results in reverse to get latest
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+
+                    if (event.results[i].isFinal) {
+                        newFinalTranscript += transcript + ' ';
+                        state.isFinalTranscript = true;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                // Add new final transcript to state (preserves old text)
+                if (newFinalTranscript) {
+                    state.transcript += newFinalTranscript;
+                }
+
+                // Display: old text + new text + interim
+                const fullText = state.transcript + interimTranscript;
+                displayText(fullText.trim(), true);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                
+                // Handle specific errors
+                if (event.error === 'no-speech') {
+                    showToast('No speech detected. Retrying...', 'error');
+                } else if (event.error === 'network') {
+                    showToast('Network error. Check your connection.', 'error');
+                } else if (event.error === 'not-allowed') {
+                    showToast('Microphone permission denied. Enable in settings.', 'error');
+                } else {
+                    showToast(`Error: ${event.error}`, 'error');
+                }
+
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                // Only restart if user didn't manually stop and not already restarting
+                if (state.isListening && !state.manualStop) {
+                    state.isListening = false;
+                    stopTimer();
+                    updateUI();
+                    
+                    // Show final text
+                    if (state.transcript) {
+                        displayText(state.transcript.trim(), false);
+                    }
+
+                    // Auto-restart listening in continuous mode
+                    showToast('Paused - Resuming in 1 second...', 'success');
+                    setTimeout(() => {
+                        // Only restart if user didn't stop it manually
+                        if (!state.manualStop) {
+                            startListening(true); // Continue mode to append text
+                        }
+                    }, 1000);
+                } else {
+                    state.isListening = false;
+                    stopTimer();
+                    state.manualStop = false; // Reset for next time
+                    updateUI();
+                }
+            };
+
+            state.recognition = recognition;
+            return recognition;
+        }
+
+        // ============================================
+        // CONTROL FUNCTIONS
+        // ============================================
+        function startListening(continueMode = false) {
+            // Prevent multiple starts
+            if (state.isListening) {
+                console.warn('Already listening');
+                return;
+            }
+
+            const recognition = initializeSpeechRecognition();
+            if (!recognition) return;
+
+            try {
+                state.isListening = true;
+                state.manualStop = false;
+                
+                // In continue mode, keep existing text and add space
+                // In new mode, clear everything
+                if (!continueMode) {
+                    state.transcript = '';
+                } else {
+                    // Add space to separate from previous text if it exists
+                    if (state.transcript && !state.transcript.endsWith(' ')) {
+                        state.transcript += ' ';
+                    }
+                }
+                
+                state.isFinalTranscript = false;
+                recognition.start();
+                updateUI();
+            } catch (error) {
+                console.error('Error starting recognition:', error);
+                state.isListening = false;
+                updateUI();
+            }
+        }
+
+        function stopListening() {
+            if (!state.isListening || !state.recognition) return;
+
+            state.isListening = false;
+            state.manualStop = true; // Mark that user manually stopped
+            state.recognition.stop(); // Triggers onend event
+            updateUI();
+        }
+
+        function startNewRecording() {
+            // Clear all text and start fresh
+            state.transcript = '';
+            state.isFinalTranscript = false;
+            state.manualStop = false;
+            const textContent = document.getElementById('textContent');
+            textContent.value = '';
+            document.getElementById('textDisplay').classList.remove('has-text');
+            startListening(false); // false = new mode, clear everything
+            showToast('Starting new recording...', 'success');
+        }
+
+        function toggleListening() {
+            if (state.isListening) {
+                stopListening();
+            } else {
+                startListening(true); // Continue mode by default in continuous mode
+            }
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateUI() {
+            const micButton = document.getElementById('micButton');
+            const stopButton = document.getElementById('stopButton');
+            const speechEndedButtons = document.getElementById('speechEndedButtons');
+            const status = document.getElementById('status');
+            const copyBtn = document.getElementById('copyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const nextLineBtn = document.getElementById('nextLineBtn');
+            const downloadWordBtn = document.getElementById('downloadWordBtn');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            const textContent = document.getElementById('textContent');
+
+            if (state.isListening) {
+                // LISTENING STATE
+                micButton.classList.add('listening');
+                micButton.textContent = '🎤';
+                micButton.disabled = false;
+                
+                stopButton.classList.add('show');
+                stopButton.disabled = false;
+                
+                speechEndedButtons.classList.remove('show');
+                
+                status.textContent = `Listening... (Continuous Mode)`;
+                status.className = 'status listening';
+                textContent.disabled = true;
+                
+                // Disable download buttons while listening
+                copyBtn.disabled = true;
+                clearBtn.disabled = true;
+                nextLineBtn.disabled = true;
+                downloadWordBtn.disabled = true;
+                downloadPdfBtn.disabled = true;
+            } else {
+                // NOT LISTENING STATE
+                micButton.classList.remove('listening');
+                micButton.textContent = '🎙️';
+                micButton.disabled = false;
+                
+                stopButton.classList.remove('show');
+                
+                // Show new recording button only if there's text
+                if (textContent.value.trim().length > 0) {
+                    speechEndedButtons.classList.add('show');
+                    status.textContent = 'Paused - Continue or start new recording';
+                } else {
+                    speechEndedButtons.classList.remove('show');
+                    status.textContent = 'Tap to start listening (Continuous Mode)';
+                }
+                
+                status.className = 'status idle';
+                textContent.disabled = false;
+            }
+
+            // Enable copy/clear/download/nextline if text exists
+            const hasText = textContent.value.trim().length > 0;
+            copyBtn.disabled = !hasText || state.isListening;
+            clearBtn.disabled = !hasText || state.isListening;
+            nextLineBtn.disabled = !hasText || state.isListening;
+            downloadWordBtn.disabled = !hasText || state.isListening;
+            downloadPdfBtn.disabled = !hasText || state.isListening;
+        }
+
+        function displayText(text, isInterim) {
+            const textContent = document.getElementById('textContent');
+            const textDisplay = document.getElementById('textDisplay');
+
+            // Always show the text in textarea
+            textContent.value = text || '';
+            textContent.classList.toggle('empty', !text);
+
+            if (text) {
+                textDisplay.classList.add('has-text');
+            }
+            
+            // Keep scroll at bottom when new text arrives
+            textContent.scrollTop = textContent.scrollHeight;
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function copyToClipboard() {
+            const textContent = document.getElementById('textContent');
+            const text = textContent.value.trim();
+            if (!text) return;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+
+        function clearText() {
+            const textContent = document.getElementById('textContent');
+            state.transcript = '';
+            state.isFinalTranscript = false;
+            textContent.value = '';
+            document.getElementById('textDisplay').classList.remove('has-text');
+            updateUI();
+            showToast('Text cleared', 'success');
+        }
+
+        function showToast(message, type = 'default') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        const micButton = document.getElementById('micButton');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const stopButton = document.getElementById('stopButton');
+        const newRecordingBtn = document.getElementById('newRecordingBtn');
+        const nextLineBtn = document.getElementById('nextLineBtn');
+        const downloadWordBtn = document.getElementById('downloadWordBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+        // ============================================
+        // MIC BUTTON LISTENERS
+        // ============================================
+        micButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleListening();
+        });
+
+        micButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            micButton.focus();
+        });
+
+        micButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            toggleListening();
+        });
+
+        // Stop button listeners
+        stopButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            stopListening();
+        });
+
+        stopButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            stopButton.focus();
+        });
+
+        stopButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopListening();
+        });
+
+        // New recording button listeners
+        newRecordingBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            startNewRecording();
+        });
+
+        newRecordingBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            newRecordingBtn.focus();
+        });
+
+        newRecordingBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            startNewRecording();
+        });
+
+        copyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            copyToClipboard();
+        });
+
+        copyBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            copyToClipboard();
+        });
+
+        clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearText();
+        });
+
+        clearBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            clearText();
+        });
+
+        // Next line button listeners
+        nextLineBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            addNextLine();
+        });
+
+        nextLineBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            addNextLine();
+        });
+
+        // Download Word button listeners
+        downloadWordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadAsWord();
+        });
+
+        downloadWordBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            downloadAsWord();
+        });
+
+        // Download PDF button listeners
+        downloadPdfBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadAsPDFAlt();
+        });
+
+        downloadPdfBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            downloadAsPDFAlt();
+        });
+
+        // Sync textarea changes with state
+        const textContent = document.getElementById('textContent');
+        textContent.addEventListener('input', (e) => {
+            state.transcript = e.target.value;
+            updateUI();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (state.recognition && state.isListening) {
+                state.recognition.abort();
+            }
+        });
+
+        // Initialize UI
+        updateUI();
+    </script>
 </body>
 </html>
