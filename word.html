@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Doc Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="title">VoiceDoc Pro</div>
+        <div class="header-actions">
+            <button id="downloadBtn" class="btn-primary">
+                <i class="fa-solid fa-download"></i> Download .doc
+            </button>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <div class="group">
+            <button id="micBtn" class="btn-mic" title="Start/Stop Voice">
+                <i class="fa-solid fa-microphone"></i> Start Mic
+            </button>
+        </div>
+
+        <div class="group">
+            <button onclick="format('bold')" title="Bold"><i class="fa-solid fa-bold"></i></button>
+            <button onclick="format('italic')" title="Italic"><i class="fa-solid fa-italic"></i></button>
+            <button onclick="format('underline')" title="Underline"><i class="fa-solid fa-underline"></i></button>
+        </div>
+
+        <div class="group">
+            <button onclick="format('justifyLeft')" title="Align Left"><i class="fa-solid fa-align-left"></i></button>
+            <button onclick="format('justifyCenter')" title="Align Center"><i
+                    class="fa-solid fa-align-center"></i></button>
+            <button onclick="format('justifyRight')" title="Align Right"><i
+                    class="fa-solid fa-align-right"></i></button>
+        </div>
+
+        <div class="group">
+            <select id="fontSize" onchange="changeFontSize(this.value)" style="padding: 2px;">
+                <option value="3">Normal</option>
+                <option value="4">Medium</option>
+                <option value="5">Large</option>
+                <option value="6">Heading</option>
+            </select>
+        </div>
+
+        <div class="group">
+            <button onclick="clearEditor()" title="Clear All" style="color: #ef4444;"><i
+                    class="fa-solid fa-trash"></i></button>
+        </div>
+    </div>
+
+    <main>
+        <div id="editor" class="document-container" contenteditable="true"
+            data-placeholder="Start speaking or type here..."></div>
+    </main>
+
+    <div class="status-bar">
+        <span id="status">Status: Ready</span>
+        <span id="wordCount">Words: 0</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
