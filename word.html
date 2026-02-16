@@ -5,8 +5,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Doc Editor</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-gray: #f3f4f6;
+            --paper-white: #ffffff;
+            --border-color: #e5e7eb;
+            --text-main: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--paper-white);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .toolbar {
+            background: var(--paper-white);
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .group {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0 0.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .group:last-child {
+            border-right: none;
+        }
+
+        button {
+            background: none;
+            border: 1px solid transparent;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        button:hover {
+            background: var(--bg-gray);
+        }
+
+        button.active {
+            background: #e0e7ff;
+            color: var(--primary);
+            border-color: #c7d2fe;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-mic.recording {
+            background: #ef4444;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .document-container {
+            background: var(--paper-white);
+            width: 210mm;
+            /* A4 width */
+            min-height: 297mm;
+            /* A4 height */
+            padding: 20mm;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            outline: none;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .document-container:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+        }
+
+        .status-bar {
+            background: var(--paper-white);
+            padding: 0.25rem 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
 </head>
 
 <body>
@@ -65,7 +218,187 @@
         <span id="wordCount">Words: 0</span>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const editor = document.getElementById('editor');
+        const micBtn = document.getElementById('micBtn');
+        const statusDisplay = document.getElementById('status');
+        const wordCountDisplay = document.getElementById('wordCount');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let isRecording = false;
+        let recognition;
+
+        // Initialize Speech Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.continuous = true; // FIX: Keep recording even after short pauses
+            recognition.interimResults = true; // Show text as it's being spoken
+            recognition.lang = 'en-IN'; // Default to English (India)
+
+            recognition.onstart = () => {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i> Stop Mic';
+                statusDisplay.innerText = 'Status: Listening...';
+            };
+
+            recognition.onend = () => {
+                // FIX: Auto-restart if it stops unexpectedly but should be recording
+                if (isRecording) {
+                    recognition.start();
+                } else {
+                    micBtn.classList.remove('recording');
+                    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Start Mic';
+                    statusDisplay.innerText = 'Status: Ready';
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech Recognition Error:', event.error);
+                statusDisplay.innerText = `Status: Error (${event.error})`;
+                if (event.error === 'not-allowed') {
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                }
+            };
+
+            let interimSpan = null;
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                // Ensure we have an interim span at the current cursor
+                if (!interimSpan) {
+                    interimSpan = document.createElement('span');
+                    interimSpan.style.color = '#9ca3af'; // Grayish color for interim text
+                    interimSpan.id = 'interim-text';
+
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        range.insertNode(interimSpan);
+                        range.setStartAfter(interimSpan);
+                        range.setEndAfter(interimSpan);
+                    } else {
+                        editor.appendChild(interimSpan);
+                    }
+                }
+
+                if (finalTranscript) {
+                    // Remove interim span content, insert final text, then reset interim span
+                    const finalNode = document.createTextNode(finalTranscript + ' ');
+                    interimSpan.parentNode.insertBefore(finalNode, interimSpan);
+                    interimSpan.innerText = '';
+
+                    // Move cursor after the new final text
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.setStartAfter(finalNode);
+                    range.setEndAfter(finalNode);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+
+                if (interimTranscript) {
+                    interimSpan.innerText = interimTranscript;
+                } else {
+                    interimSpan.innerText = '';
+                }
+
+                updateWordCount();
+            };
+
+            // This onend is for clearing the interim span and handling recording state
+            recognition.onend = () => {
+                // Clear interim span on end
+                if (interimSpan) {
+                    interimSpan.remove();
+                    interimSpan = null;
+                }
+
+                if (isRecording) {
+                    recognition.start();
+                } else {
+                    micBtn.classList.remove('recording');
+                    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Start Mic';
+                    statusDisplay.innerText = 'Status: Ready';
+                }
+            };
+        } else {
+            statusDisplay.innerText = 'Status: Speech Recognition not supported in this browser.';
+            micBtn.disabled = true;
+        }
+
+        // Mic Button Toggle
+        micBtn.addEventListener('click', () => {
+            if (isRecording) {
+                isRecording = false;
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+
+        // Formatting Functions
+        function format(command, value = null) {
+            document.execCommand(command, false, value);
+            editor.focus();
+        }
+
+        function changeFontSize(size) {
+            format('fontSize', size);
+        }
+
+        function clearEditor() {
+            if (confirm('Clear all content?')) {
+                editor.innerHTML = '';
+                updateWordCount();
+            }
+        }
+
+        function updateWordCount() {
+            const text = editor.innerText.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            wordCountDisplay.innerText = `Words: ${words}`;
+        }
+
+        // Auto-update word count on typing
+        editor.addEventListener('input', updateWordCount);
+
+        // Download Functionality
+        downloadBtn.addEventListener('click', () => {
+            const content = editor.innerHTML;
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                "<head><meta charset='utf-8'><title>Export HTML to Doc</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + content + footer;
+
+            const blob = new Blob(['\ufeff', sourceHTML], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'document.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
 </body>
 
 </html>
