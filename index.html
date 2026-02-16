@@ -4,331 +4,1215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Doc Editor</title>
+    <title>Chili Piper - Voice Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --primary: #2563eb;
-            --bg-gray: #f3f4f6;
-            --paper-white: #ffffff;
-            --border-color: #e5e7eb;
-            --text-main: #1f2937;
+            --primary-orange: #ff5733;
+            --sidebar-bg: #fff;
+            --main-bg: #fff;
+            --sub-bg: #f8f9fa;
+            --border: #eaebef;
+            --text-main: #333;
+            --text-muted: #888;
+            --text-blue: #4a90e2;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: var(--bg-gray);
+            background-color: var(--main-bg);
             color: var(--text-main);
-            display: flex;
-            flex-direction: column;
             height: 100vh;
+            display: flex;
             overflow: hidden;
         }
 
-        header {
-            background: var(--paper-white);
-            padding: 1rem 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        /* Sidebar */
+        aside {
+            width: 80px;
+            background-color: #fff;
+            border-right: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            z-index: 10;
+            padding: 20px 0;
+            flex-shrink: 0;
         }
 
-        .title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
+        .sidebar-logo {
+            color: var(--primary-orange);
+            font-size: 24px;
+            margin-bottom: 30px;
         }
 
-        .toolbar {
-            background: var(--paper-white);
-            padding: 0.5rem 1rem;
-            border-bottom: 1px solid var(--border-color);
+        .sidebar-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
             display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
             align-items: center;
-        }
-
-        .group {
-            display: flex;
-            gap: 0.25rem;
-            padding: 0 0.5rem;
-            border-right: 1px solid var(--border-color);
-        }
-
-        .group:last-child {
-            border-right: none;
-        }
-
-        button {
-            background: none;
-            border: 1px solid transparent;
-            padding: 0.5rem;
-            border-radius: 4px;
+            justify-content: center;
+            color: var(--text-muted);
+            margin-bottom: 20px;
             cursor: pointer;
-            font-size: 0.875rem;
             transition: all 0.2s;
+        }
+
+        .sidebar-btn.active,
+        .sidebar-btn:hover {
+            color: var(--primary-orange);
+        }
+
+        .sidebar-btn.plus {
+            background-color: var(--primary-orange);
+            color: #fff;
+            margin-bottom: 40px;
+        }
+
+        /* Main Context */
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        header.top-nav {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            padding: 0 40px;
+            gap: 40px;
+            font-size: 14px;
+            color: var(--text-muted);
         }
 
-        button:hover {
-            background: var(--bg-gray);
+        header.top-nav .nav-item {
+            cursor: pointer;
+            padding-bottom: 20px;
+            margin-top: 20px;
         }
 
-        button.active {
-            background: #e0e7ff;
-            color: var(--primary);
-            border-color: #c7d2fe;
+        header.top-nav .nav-item.active {
+            color: var(--text-main);
+            border-bottom: 2px solid var(--primary-orange);
         }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            padding: 0.5rem 1rem;
+        .content-layout {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Middle Section */
+        .main-editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 40px;
+            overflow-y: auto;
+            background-color: var(--sub-bg);
+        }
+
+        .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-mini {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            border: 1px solid var(--border);
             border-radius: 6px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-size: 13px;
+            width: 150px;
+        }
+
+        /* Message Card */
+        .message-card {
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            flex: 1;
+            min-height: 600px;
+        }
+
+        .message-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge-new {
+            background-color: #fff1ed;
+            color: var(--primary-orange);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .message-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .sender-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .sender-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #eee;
+        }
+
+        .msg-body {
+            flex: 1;
+            padding: 32px;
+            font-size: 15px;
+            line-height: 1.6;
+            outline: none;
+            color: #444;
+        }
+
+        .msg-footer {
+            padding: 16px 32px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-send {
+            background-color: var(--primary-orange);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .footer-icons {
+            display: flex;
+            gap: 16px;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .footer-icons i {
+            cursor: pointer;
+        }
+
+        .footer-icons i:hover {
+            color: var(--primary-orange);
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 320px;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            overflow-y: auto;
+            /* Enable scrolling */
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 15px;
             font-weight: 600;
         }
 
-        .btn-primary:hover {
-            background: #1d4ed8;
+        .panel-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
         }
 
-        .btn-mic.recording {
-            background: #ef4444;
-            color: white;
-            animation: pulse 1.5s infinite;
+        .opp-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
         }
 
-        @keyframes pulse {
+        .opp-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .opp-value {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .next-step-box {
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .ns-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .ns-badge {
+            background: #e1f5fe;
+            color: #039be5;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .ns-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .ns-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-yes {
+            flex: 1;
+            background-color: var(--primary-orange);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-no {
+            flex: 1;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Removed old mic-fab styles */
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            aside {
+                position: sticky;
+                top: 60px;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: 10px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-x: auto;
+                background: #fff;
+                z-index: 99;
+                order: 2;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 20px;
+                -webkit-overflow-scrolling: touch;
+                box-sizing: border-box;
+            }
+
+            aside::-webkit-scrollbar {
+                display: none;
+            }
+
+            aside .sidebar-logo {
+                display: none;
+            }
+
+            aside .sidebar-btn {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .app-container {
+                display: contents;
+                width: 100%;
+            }
+
+            .top-nav {
+                order: 1;
+                position: sticky;
+                top: 0;
+                background: #fff;
+                z-index: 100;
+                padding: 0 10px;
+                gap: 10px;
+                width: 100%;
+                box-sizing: border-box;
+                display: flex;
+                align-items: center;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .top-nav>div[style*="gap: 20px"] {
+                gap: 10px !important;
+            }
+
+            .content-layout {
+                order: 3;
+                flex-direction: column;
+                width: 100%;
+                box-sizing: border-box;
+                overflow: visible;
+                height: auto;
+            }
+
+            .top-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .search-box {
+                display: none;
+            }
+
+            .main-editor-section {
+                padding: 10px;
+                order: 3;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .msg-body.page-a4,
+            .msg-body.page-a3 {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 5px 0;
+                padding: 15px;
+                min-height: auto;
+                box-shadow: none;
+                box-sizing: border-box;
+                overflow-wrap: break-word;
+            }
+
+            .right-panel {
+                position: fixed;
+                right: -320px;
+                top: 0;
+                height: 100vh;
+                z-index: 1001;
+                transition: right 0.3s;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .right-panel.open {
+                right: 0;
+            }
+
+            .style-toggle-btn {
+                display: flex !important;
+                font-size: 20px;
+                color: var(--primary-orange);
+                cursor: pointer;
+                padding: 5px;
+            }
+        }
+
+        .style-toggle-btn {
+            display: none;
+        }
+
+        .mobile-fab-styles,
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        /* Responsive */
+
+        .panel-section h3 {
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .header-mic-btn {
+            background: #fff1ed;
+            color: var(--primary-orange);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #ff573333;
+        }
+
+        .header-mic-btn:hover {
+            background: #ff573311;
+        }
+
+        .header-mic-btn.active {
+            background: var(--primary-orange);
+            color: #fff;
+            animation: header-pulse 1.5s infinite;
+        }
+
+        @keyframes header-pulse {
             0% {
-                transform: scale(1);
+                opacity: 1;
             }
 
             50% {
-                transform: scale(1.05);
+                opacity: 0.7;
             }
 
             100% {
-                transform: scale(1);
+                opacity: 1;
             }
         }
 
-        main {
+        .download_word {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: #fff;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Format Tool Grid */
+        .format-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .format-tool-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .format-tool-btn:hover {
+            background: #fff;
+            border-color: var(--primary-orange);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .format-tool-btn i {
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .format-tool-wide {
+            grid-column: span 2;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            /* Reduced padding for mobile */
-            display: flex;
-            justify-content: center;
         }
 
-        .document-container {
-            background: var(--paper-white);
+        .category-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin: 16px 0 8px 0;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .category-title:first-child {
+            margin-top: 0;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100px);
+            opacity: 0;
+            pointer-events: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .guide-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guide-item {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .guide-cmd {
+            font-weight: 700;
+            color: var(--primary-orange);
+            font-size: 14px;
+        }
+
+        .guide-desc {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .format-tool-btn.voice-active {
+            border: 2px solid var(--primary-orange) !important;
+            background: #fff7ed !important;
+            transition: all 0.3s;
+        }
+
+        /* Page Layout Styles */
+        .msg-body.page-a4 {
             width: 210mm;
-            /* A4 width */
             min-height: 297mm;
-            /* A4 height */
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
             padding: 20mm;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            outline: none;
-            font-size: 11pt;
-            line-height: 1.5;
-            color: #333;
-            transition: width 0.3s;
         }
 
-        /* Mobile Responsive Styles */
-        @media screen and (max-width: 768px) {
-            header {
-                padding: 0.75rem 1rem;
-            }
-
-            .toolbar {
-                padding: 0.5rem;
-                overflow-x: auto;
-                white-space: nowrap;
-                justify-content: flex-start;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .group {
-                padding: 0 0.25rem;
-            }
-
-            button {
-                padding: 0.75rem;
-                /* Larger touch targets */
-                font-size: 1rem;
-            }
-
-            .document-container {
-                width: 100%;
-                min-height: auto;
-                padding: 1.5rem;
-                margin-bottom: 2rem;
-            }
-
-            .title {
-                font-size: 1rem;
-            }
-
-            .btn-primary {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.875rem;
-            }
+        .msg-body.page-a3 {
+            width: 297mm;
+            min-height: 420mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            padding: 25mm;
         }
 
-        .document-container:empty:before {
-            content: attr(data-placeholder);
-            color: #9ca3af;
+        /* Adjust main editor section for page view */
+        .main-editor-section {
+            background-color: #f1f3f4;
+            /* Subtle gray background like Google Docs */
         }
 
-        .status-bar {
-            background: var(--paper-white);
-            padding: 0.25rem 1rem;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.75rem;
-            color: #6b7280;
+        .message-card {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        /* Settings Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 450px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
             display: flex;
+            align-items: center;
             justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 20px;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .settings-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .settings-input:focus {
+            border-color: var(--primary-orange);
+        }
+
+        .modal-footer {
+            margin-top: 32px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-modal-save {
+            background: var(--primary-orange);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <div class="title">VoiceDoc Pro</div>
-        <div class="header-actions">
-            <button id="downloadBtn" class="btn-primary">
-                <i class="fa-solid fa-download"></i> Download .doc
-            </button>
-        </div>
-    </header>
+    <!-- 80px Sidebar -->
+    <aside>
+        <div class="sidebar-logo"><i class="fa-solid fa-pepper-hot"></i></div>
+        <div class="sidebar-btn"><i class="fa-solid fa-phone"></i></div>
+        <div class="sidebar-btn"><i class="fa-solid fa-star"></i></div>
+        <div class="sidebar-btn active"><i class="fa-solid fa-inbox"></i></div>
+        <div class="sidebar-btn" id="openGuide" title="Voice Guide"><i class="fa-solid fa-chart-simple"></i></div>
+        <div class="sidebar-btn" id="openSettings" title="Settings"><i class="fa-solid fa-gear"></i></div>
+    </aside>
 
-    <div class="toolbar">
-        <div class="group">
-            <button id="micBtn" class="btn-mic" title="Start/Stop Voice">
-                <i class="fa-solid fa-microphone"></i> Start Mic
-            </button>
-        </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <div class="group">
-            <button onclick="format('bold')" title="Bold"><i class="fa-solid fa-bold"></i></button>
-            <button onclick="format('italic')" title="Italic"><i class="fa-solid fa-italic"></i></button>
-            <button onclick="format('underline')" title="Underline"><i class="fa-solid fa-underline"></i></button>
-        </div>
+    <div class="app-container">
+        <!-- Top Nav -->
+        <header class="top-nav">
+            <div class="style-toggle-btn" id="mobileStyleBtn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div style="flex: 1"></div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <!-- Moved Search to Top Nav -->
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="topSearch" placeholder="Search...">
+                </div>
 
-        <div class="group">
-            <button onclick="format('justifyLeft')" title="Align Left"><i class="fa-solid fa-align-left"></i></button>
-            <button onclick="format('justifyCenter')" title="Align Center"><i
-                    class="fa-solid fa-align-center"></i></button>
-            <button onclick="format('justifyRight')" title="Align Right"><i
-                    class="fa-solid fa-align-right"></i></button>
-        </div>
+                <div class="header-mic-btn" id="micBtn">
+                    <i class="fa-solid fa-microphone"></i>
+                    <span>Start Voice</span>
+                </div>
+                <i class="fa-solid fa-volume-high" id="speakBtn"
+                    style="cursor: pointer; color: var(--text-muted); font-size: 16px;" title="Read Aloud"></i>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Scott" class="sender-avatar">
+            </div>
+        </header>
 
-        <div class="group">
-            <select id="fontSize" onchange="changeFontSize(this.value)" style="padding: 2px;">
-                <option value="3">Normal</option>
-                <option value="4">Medium</option>
-                <option value="5">Large</option>
-                <option value="6">Heading</option>
-            </select>
-        </div>
+        <div class="content-layout">
+            <!-- Middle Editor Section -->
+            <section class="main-editor-section">
 
-        <div class="group">
-            <button onclick="clearEditor()" title="Clear All" style="color: #ef4444;"><i
-                    class="fa-solid fa-trash"></i></button>
+
+                <div class="message-card">
+
+
+
+
+                    <div id="editor" class="msg-body page-a4" contenteditable="true">
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Right Dashboard Panel -->
+            <aside class="right-panel">
+
+
+                <div class="panel-content">
+                    <!-- Moved Actions to Top -->
+                    <div class="panel-section download_word">
+                        <h3>Actions</h3>
+
+                        <button class="btn-no"
+                            style="width: 100%; border-color: var(--primary-orange); color: var(--primary-orange);"
+                            onclick="downloadDoc()"><i class="fa-solid fa-file-word"></i> Export to Word</button>
+                    </div>
+
+                    <!-- Moved Actions & Styles -->
+
+
+                    <div class="panel-section styles-content">
+                        <div class="opp-card">
+                            <!-- Typographic Category -->
+                            <div class="category-title">Typographic</div>
+                            <div class="format-grid">
+                                <div class="format-tool-btn" onmousedown="format(event, 'bold')" title="Bold">
+                                    <i class="fa-solid fa-bold" style="color: #1d4ed8;"></i> <span>Bold</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'italic')" title="Italic">
+                                    <i class="fa-solid fa-italic" style="color: #7c3aed;"></i> <span>Italic</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'underline')" title="Underline">
+                                    <i class="fa-solid fa-underline" style="color: #059669;"></i> <span>Underline</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'strikethrough')"
+                                    title="Strikethrough">
+                                    <i class="fa-solid fa-strikethrough" style="color: #dc2626;"></i>
+                                    <span>Strike</span>
+                                </div>
+                                <!-- Font Size Selector -->
+                                <div class="format-tool-btn format-tool-wide">
+                                    <i class="fa-solid fa-text-height" style="color: #4a5568;"></i>
+                                    <select onchange="format(null, 'fontSize', this.value)"
+                                        onmousedown="event.stopPropagation()"
+                                        style="flex: 1; border: none; background: transparent; font-size: 12px; outline: none; cursor: pointer;">
+                                        <option value="1">Size 1</option>
+                                        <option value="2">Size 2</option>
+                                        <option value="3" selected>Size 3 (Normal)</option>
+                                        <option value="4">Size 4</option>
+                                        <option value="5">Size 5</option>
+                                        <option value="6">Size 6</option>
+                                        <option value="7">Size 7</option>
+                                    </select>
+                                </div>
+                                <!-- Font Family Selector -->
+                                <div class="format-tool-btn format-tool-wide">
+                                    <i class="fa-solid fa-font" style="color: #3b82f6;"></i>
+                                    <select onchange="format(null, 'fontName', this.value)"
+                                        onmousedown="event.stopPropagation()"
+                                        style="flex: 1; border: none; background: transparent; font-size: 12px; outline: none; cursor: pointer;">
+                                        <option value="Inter">Default (Inter)</option>
+                                        <option value="Arial">Arial</option>
+                                        <option value="Calibri">Calibri</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Verdana">Verdana</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                    </select>
+                                </div>
+                                <div class="format-tool-btn format-tool-wide">
+                                    <i class="fa-solid fa-palette" style="color: #ec4899;"></i>
+                                    <span style="flex: 1;">Text Color</span>
+                                    <input type="color" onchange="format(null, 'foreColor', this.value)"
+                                        onmousedown="event.stopPropagation()"
+                                        style="width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; padding: 0;">
+                                </div>
+                            </div>
+
+                            <!-- Alignment Category -->
+                            <div class="category-title">Alignment</div>
+                            <div class="format-grid">
+                                <div class="format-tool-btn" onmousedown="format(event, 'justifyLeft')"
+                                    title="Align Left">
+                                    <i class="fa-solid fa-align-left" style="color: #2563eb;"></i> <span>Left</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'justifyCenter')"
+                                    title="Align Center">
+                                    <i class="fa-solid fa-align-center" style="color: #9333ea;"></i> <span>Center</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'justifyRight')"
+                                    title="Align Right">
+                                    <i class="fa-solid fa-align-right" style="color: #3b82f6;"></i> <span>Right</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'justifyFull')" title="Justify">
+                                    <i class="fa-solid fa-align-justify" style="color: #6366f1;"></i> <span>Full</span>
+                                </div>
+                            </div>
+
+                            <!-- Style & History Category -->
+                            <div class="category-title">Orders</div>
+                            <div class="format-grid">
+                                <div class="format-tool-btn" onmousedown="format(event, 'insertUnorderedList')"
+                                    title="Bullet List">
+                                    <i class="fa-solid fa-list-ul" style="color: #d97706;"></i> <span>Bullets</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'insertOrderedList')"
+                                    title="Numbered List">
+                                    <i class="fa-solid fa-list-ol" style="color: #4b5563;"></i> <span>Numbers</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'undo')" title="Undo">
+                                    <i class="fa-solid fa-undo" style="color: #ef4444;"></i> <span>Undo</span>
+                                </div>
+                                <div class="format-tool-btn" onmousedown="format(event, 'redo')" title="Redo">
+                                    <i class="fa-solid fa-redo" style="color: #10b981;"></i> <span>Redo</span>
+                                </div>
+                            </div>
+
+                            <!-- Page Layout Category -->
+                            <div class="category-title">Page Layout</div>
+                            <div class="format-grid">
+                                <div class="format-tool-btn format-tool-wide">
+                                    <i class="fa-solid fa-file-lines" style="color: #3b82f6;"></i>
+                                    <select onchange="setPageSize(this.value)"
+                                        style="flex: 1; border: none; background: transparent; font-size: 12px; outline: none; cursor: pointer;">
+                                        <option value="none">Size: Fluid</option>
+                                        <option value="page-a4" selected>Size: A4 (Standard)</option>
+                                        <option value="page-a3">Size: A3 (Large)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
 
-    <main>
-        <div id="editor" class="document-container" contenteditable="true"
-            data-placeholder="Start speaking or type here..."></div>
-    </main>
+    <!-- Removed floating Mic Button -->
 
-    <div class="status-bar">
-        <span id="status">Status: Ready</span>
-        <span id="wordCount">Words: 0</span>
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Voice Settings</h2>
+                <i class="fa-solid fa-xmark modal-close" id="closeSettings"></i>
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Start Recording Shortcut (Key)</label>
+                <input type="text" id="startKey" class="settings-input" placeholder="e.g., r" value="r">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Stop Voice Shortcut (Key)</label>
+                <input type="text" id="stopKey" class="settings-input" placeholder="e.g., s" value="s">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Custom Stop Voice Command (Speech)</label>
+                <input type="text" id="stopCommandText" class="settings-input" placeholder="e.g., stop recording"
+                    value="stop voice">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Recognition Language</label>
+                <select id="voiceLang" class="settings-input">
+                    <option value="en-IN" selected>English (India)</option>
+                    <option value="ta-IN">Tamil (India)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Done & Download Command (Speech)</label>
+                <input type="text" id="downloadCommandText" class="settings-input" placeholder="e.g., download file"
+                    value="end voice download file">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Speak Speed (Playback Rate)</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" id="speakRate" min="0.5" max="2" step="0.1" value="1"
+                        style="flex: 1; accent-color: var(--primary-orange);">
+                    <span id="rateValue" style="font-size: 12px; font-weight: 600; width: 30px;">1.0x</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-save" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guide Modal -->
+    <div class="modal-overlay" id="guideModal" style="display: none;">
+        <div class="modal-content" style="width: 500px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>Voice Command Guide</h2>
+                <i class="fa-solid fa-xmark modal-close" id="closeGuide"></i>
+            </div>
+            <div class="guide-list">
+                <div class="guide-item">
+                    <span class="guide-cmd">"stop voice"</span>
+                    <span class="guide-desc">Stops the recording immediately. (Customizable in settings)</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"end voice download file"</span>
+                    <span class="guide-desc">Stops recording and exports the document to Word. (Customizable in
+                        settings)</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"recording top add"</span>
+                    <span class="guide-desc">Moves the current text insertion point to the very top of the
+                        document.</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"access style [Category]"</span>
+                    <span class="guide-desc">Scrolls to a style category (e.g., "access style Typographic").</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"access style [Category] [Action]"</span>
+                    <span class="guide-desc">Toggles a specific format (e.g., "access style Typographic Bold").
+                        Highlights the tool if active.</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"delete text [word]" / "remove text [word]"</span>
+                    <span class="guide-desc">Deletes the last word typed if it matches (e.g., "remove text Jai").</span>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-cmd">"guide"</span>
+                    <span class="guide-desc">Opens this helpful voice command reference modal.</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // --- Core Logic (Voice + Editor) ---
         const editor = document.getElementById('editor');
         const micBtn = document.getElementById('micBtn');
-        const statusDisplay = document.getElementById('status');
-        const wordCountDisplay = document.getElementById('wordCount');
-        const downloadBtn = document.getElementById('downloadBtn');
+        const micText = micBtn.querySelector('span');
+
+        // Settings State
+        let config = {
+            startKey: 'r',
+            stopKey: 's',
+            stopCommand: 'stop voice',
+            lang: 'en-IN',
+            downloadCommand: 'end voice download file',
+            speakRate: 1
+        };
+
+        const settingsModal = document.getElementById('settingsModal');
+        const openSettings = document.getElementById('openSettings');
+        const closeSettings = document.getElementById('closeSettings');
+        const saveSettings = document.getElementById('saveSettings');
+
+        const guideModal = document.getElementById('guideModal');
+        const openGuide = document.getElementById('openGuide');
+        const closeGuide = document.getElementById('closeGuide');
+
+        // Mobile Toggles
+        const mobileStyleBtn = document.getElementById('mobileStyleBtn');
+        const asideEl = document.querySelector('aside');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const rightPanel = document.querySelector('.right-panel');
+
+        mobileStyleBtn.onclick = () => {
+            rightPanel.classList.add('open');
+            sidebarOverlay.classList.add('show');
+        };
+
+        sidebarOverlay.onclick = () => {
+            rightPanel.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        };
+
+        openSettings.onclick = () => settingsModal.style.display = 'flex';
+        closeSettings.onclick = () => settingsModal.style.display = 'none';
+
+        openGuide.onclick = () => guideModal.style.display = 'flex';
+        closeGuide.onclick = () => guideModal.style.display = 'none';
+
+        window.onclick = (e) => {
+            if (e.target == settingsModal) settingsModal.style.display = 'none';
+            if (e.target == guideModal) guideModal.style.display = 'none';
+        };
+
+        saveSettings.onclick = () => {
+            config.startKey = document.getElementById('startKey').value.toLowerCase();
+            config.stopKey = document.getElementById('stopKey').value.toLowerCase();
+            config.stopCommand = document.getElementById('stopCommandText').value.toLowerCase();
+            config.lang = document.getElementById('voiceLang').value;
+            config.downloadCommand = document.getElementById('downloadCommandText').value.toLowerCase();
+            config.speakRate = parseFloat(document.getElementById('speakRate').value);
+
+            // Update recognition language immediately
+            if (recognition) {
+                recognition.lang = config.lang;
+            }
+
+            settingsModal.style.display = 'none';
+            showToast("Settings saved!");
+        };
+
+        // Live Speed Value Update
+        document.getElementById('speakRate').addEventListener('input', (e) => {
+            document.getElementById('rateValue').innerText = e.target.value + 'x';
+        });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            // Only trigger if not typing in an input or editor
+            if (e.target.tagName === 'INPUT' || e.target.id === 'editor') return;
+
+            if (e.key.toLowerCase() === config.startKey && !isRecording) {
+                e.preventDefault();
+                recognition.start();
+            } else if (e.key.toLowerCase() === config.stopKey && isRecording) {
+                e.preventDefault();
+                isRecording = false;
+                recognition.stop();
+            }
+        });
 
         let isRecording = false;
         let recognition;
+        let lastCommittedIndex = -1;
+        let interimSpan = null;
 
-        // Initialize Speech Recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
-
-            recognition.continuous = true; // FIX: Keep recording even after short pauses
-            recognition.interimResults = true; // Show text as it's being spoken
-            recognition.lang = 'en-IN'; // Default to English (India)
-
-            let interimSpan = null;
-            let lastCommittedIndex = -1; // Track index of committed final results
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = config.lang;
 
             recognition.onstart = () => {
                 isRecording = true;
-                lastCommittedIndex = -1; // Reset for new session
-                micBtn.classList.add('recording');
-                micBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i> Stop Mic';
-                statusDisplay.innerText = 'Status: Listening (Mobile Optimized)';
+                lastCommittedIndex = -1;
+                micBtn.classList.add('active');
+                micText.innerText = 'Now Listening...';
+
+                // Computer Verbal Announcement
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance("Listening");
+                utterance.lang = config.lang;
+                utterance.rate = config.speakRate;
+                window.speechSynthesis.speak(utterance);
             };
 
             recognition.onend = () => {
-                if (interimSpan) {
-                    interimSpan.remove();
-                    interimSpan = null;
-                }
-
-                // Robust restart for mobile: Delay slightly to avoid rapid loops if blocked
+                if (interimSpan) { interimSpan.remove(); interimSpan = null; }
                 if (isRecording) {
-                    setTimeout(() => {
-                        try {
-                            recognition.start();
-                        } catch (e) {
-                            console.log('Mobile Restart Attempt failed:', e);
-                        }
-                    }, 500);
+                    try { recognition.start(); } catch (e) { }
                 } else {
-                    micBtn.classList.remove('recording');
-                    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Start Mic';
-                    statusDisplay.innerText = 'Status: Ready';
-                }
-            };
-
-            recognition.onerror = (event) => {
-                console.warn('Speech Recognition Error:', event.error);
-
-                if (event.error === 'network' || event.error === 'aborted') {
-                    statusDisplay.innerText = 'Status: Signal weak, reconnecting...';
-                    if (isRecording) {
-                        setTimeout(() => { try { recognition.start(); } catch (e) { } }, 1000);
-                    }
-                } else if (event.error === 'not-allowed') {
-                    statusDisplay.innerText = 'Status: Permission denied. Please enable mic.';
-                    isRecording = false;
-                    micBtn.classList.remove('recording');
-                } else if (event.error === 'no-speech') {
-                    statusDisplay.innerText = 'Status: No speech detected, still listening...';
-                } else {
-                    statusDisplay.innerText = `Status: ${event.error}. Auto-restarting...`;
+                    micBtn.classList.remove('active');
+                    micText.innerText = 'Start Voice';
                 }
             };
 
@@ -336,11 +1220,10 @@
                 let interimTranscript = '';
                 let finalTranscript = '';
 
-                // Iterate through results starting from the next uncommitted one
                 for (let i = Math.max(event.resultIndex, lastCommittedIndex + 1); i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript;
-                        lastCommittedIndex = i; // Update committed index
+                        lastCommittedIndex = i;
                     } else {
                         interimTranscript += event.results[i][0].transcript;
                     }
@@ -348,11 +1231,11 @@
 
                 if (!interimSpan) {
                     interimSpan = document.createElement('span');
-                    interimSpan.style.color = '#9ca3af';
-                    interimSpan.id = 'interim-text';
+                    interimSpan.className = 'interim-text';
 
                     const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
+                    // Fix: Ensure we only insert into the editor, not the mic area
+                    if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
                         const range = selection.getRangeAt(0);
                         range.insertNode(interimSpan);
                         range.setStartAfter(interimSpan);
@@ -363,18 +1246,194 @@
                 }
 
                 if (finalTranscript) {
+                    const lowerTranscript = finalTranscript.toLowerCase().trim();
+
+                    // Command: Dynamic Stop Voice
+                    if (lowerTranscript === config.stopCommand) {
+                        isRecording = false;
+                        recognition.stop();
+                        if (interimSpan) {
+                            interimSpan.remove();
+                            interimSpan = null;
+                        }
+                        showToast(`Recording stopped via command: "${config.stopCommand}"`);
+                        return;
+                    }
+
+                    // Command: Done & Download
+                    if (lowerTranscript === config.downloadCommand) {
+                        isRecording = false;
+                        recognition.stop();
+                        if (interimSpan) {
+                            interimSpan.remove();
+                            interimSpan = null;
+                        }
+                        showToast("Voice command: Exporting and stopping...");
+                        downloadDoc();
+                        return;
+                    }
+
+                    // Command: Guide
+                    if (lowerTranscript === 'guide') {
+                        guideModal.style.display = 'flex';
+                        showToast("Opening Command Guide...");
+                        return;
+                    }
+
+                    // Command: Move to Top
+                    if (lowerTranscript === 'recording top add') {
+                        if (interimSpan) {
+                            editor.prepend(interimSpan);
+                            // Reset selection to the start for future results
+                            const selection = window.getSelection();
+                            const range = document.createRange();
+                            range.setStart(editor, 0);
+                            range.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        }
+                        showToast("Recording moved to the top.");
+                        return;
+                    }
+
+                    // Command: Access Style [Category] [Action]
+                    if (lowerTranscript.startsWith('access style')) {
+                        const categoryElements = Array.from(document.querySelectorAll('.category-title'));
+                        const categories = categoryElements.map(el => el.innerText.toLowerCase().trim());
+                        const spokenFull = lowerTranscript.replace('access style', '').trim();
+
+                        if (!spokenFull) {
+                            const question = `Access which category ?`;
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(question);
+                            utterance.lang = config.lang;
+                            utterance.rate = config.speakRate;
+                            window.speechSynthesis.speak(utterance);
+                            showToast("Computer: Access which category?");
+                            return;
+                        }
+
+                        // Try matching category
+                        const matchedIdx = categoryElements.findIndex(el => spokenFull.includes(el.innerText.toLowerCase().trim()));
+
+                        if (matchedIdx !== -1) {
+                            const categoryTitleEl = categoryElements[matchedIdx];
+                            const categoryName = categoryTitleEl.innerText;
+                            const remainingText = spokenFull.replace(categoryName.toLowerCase().trim(), '').trim();
+
+                            categoryTitleEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            categoryTitleEl.style.color = 'var(--primary-orange)';
+                            setTimeout(() => categoryTitleEl.style.color = '', 3000);
+
+                            if (remainingText) {
+                                const container = categoryTitleEl.parentElement;
+                                const buttons = container.querySelectorAll('.format-tool-btn');
+                                let actionTaken = false;
+
+                                buttons.forEach(btn => {
+                                    const btnLabel = btn.querySelector('span') ? btn.querySelector('span').innerText.toLowerCase() : '';
+                                    const btnTitle = btn.getAttribute('title') ? btn.getAttribute('title').toLowerCase() : '';
+
+                                    if (remainingText.includes(btnLabel) || remainingText.includes(btnTitle)) {
+                                        document.querySelectorAll('.format-tool-btn').forEach(b => b.classList.remove('voice-active'));
+                                        btn.classList.add('voice-active');
+                                        setTimeout(() => btn.classList.remove('voice-active'), 5000);
+
+                                        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+                                        let status = "selected";
+                                        const cmdMap = { 'bold': 'bold', 'italic': 'italic', 'underline': 'underline', 'strike': 'strikethrough' };
+                                        const btnBase = (btnLabel || btnTitle).split(' ')[0];
+                                        const cmd = cmdMap[btnBase];
+
+                                        if (cmd) {
+                                            const isActive = document.queryCommandState(cmd);
+                                            status = isActive ? "on" : "off";
+                                        }
+
+                                        const reply = `${categoryName} ${btnLabel || btnTitle} ${status} then selected`;
+                                        window.speechSynthesis.cancel();
+                                        const utterance = new SpeechSynthesisUtterance(reply);
+                                        utterance.lang = config.lang;
+                                        utterance.rate = config.speakRate;
+                                        window.speechSynthesis.speak(utterance);
+                                        showToast(reply);
+                                        actionTaken = true;
+                                    }
+                                });
+                                if (actionTaken) return;
+                            }
+
+                            const reply = `Ready to access ${categoryName}`;
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(reply);
+                            utterance.lang = config.lang;
+                            utterance.rate = config.speakRate;
+                            window.speechSynthesis.speak(utterance);
+                            showToast(reply);
+                            return;
+                        }
+                    }
+
+                    // Command: Delete/Remove Text [Word]
+                    if (lowerTranscript.startsWith('delete text') || lowerTranscript.startsWith('remove text')) {
+                        const trigger = lowerTranscript.startsWith('delete text') ? 'delete text' : 'remove text';
+                        const targetWord = lowerTranscript.replace(trigger, '').trim().toLowerCase();
+
+                        if (!targetWord) {
+                            const question = `${trigger === 'delete text' ? 'Delete' : 'Remove'} which word?`;
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(question);
+                            utterance.lang = config.lang;
+                            utterance.rate = config.speakRate;
+                            window.speechSynthesis.speak(utterance);
+                            showToast(question);
+                            return;
+                        }
+
+                        // Get all text content before current position
+                        const editorText = editor.innerText.trim();
+                        const words = editorText.split(/\s+/);
+                        const lastWord = words[words.length - 1] ? words[words.length - 1].toLowerCase().replace(/[.,!?;:]/g, '') : '';
+
+                        if (lastWord === targetWord) {
+                            // Find the last text node to avoid destroying formatting elsewhere
+                            const walk = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+                            let node, lastTextNode;
+                            while (node = walk.nextNode()) {
+                                if (node !== interimSpan && node.textContent.trim()) lastTextNode = node;
+                            }
+
+                            if (lastTextNode) {
+                                const originalText = lastTextNode.textContent;
+                                const lastWordInNode = words[words.length - 1];
+                                const lastIndex = originalText.lastIndexOf(lastWordInNode);
+
+                                if (lastIndex !== -1) {
+                                    lastTextNode.textContent = originalText.substring(0, lastIndex).trim() + ' ';
+
+                                    const reply = `Deleted ${targetWord}`;
+                                    window.speechSynthesis.cancel();
+                                    const utterance = new SpeechSynthesisUtterance(reply);
+                                    utterance.lang = config.lang;
+                                    utterance.rate = config.speakRate;
+                                    window.speechSynthesis.speak(utterance);
+                                    showToast(reply);
+                                    return;
+                                }
+                            }
+                        } else {
+                            showToast(`Last word "${lastWord}" did not match "${targetWord}"`);
+                        }
+                    }
+
                     const textToAppend = finalTranscript.trim() + ' ';
                     const finalNode = document.createTextNode(textToAppend);
-
                     interimSpan.parentNode.insertBefore(finalNode, interimSpan);
                     interimSpan.innerText = '';
 
-                    const selection = window.getSelection();
-                    const range = document.createRange();
-                    range.setStartAfter(finalNode);
-                    range.setEndAfter(finalNode);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                    // Scroll to bottom if needed
+                    editor.scrollTop = editor.scrollHeight;
                 }
 
                 if (interimTranscript) {
@@ -382,15 +1441,9 @@
                 } else {
                     interimSpan.innerText = '';
                 }
-
-                updateWordCount();
             };
-        } else {
-            statusDisplay.innerText = 'Status: Speech Recognition not supported in this browser.';
-            micBtn.disabled = true;
         }
 
-        // Mic Button Toggle
         micBtn.addEventListener('click', () => {
             if (isRecording) {
                 isRecording = false;
@@ -400,55 +1453,149 @@
             }
         });
 
-        // Formatting Functions
-        function format(command, value = null) {
-            document.execCommand(command, false, value);
-            editor.focus();
-        }
+        let lastSelectionRange = null;
 
-        function changeFontSize(size) {
-            format('fontSize', size);
-        }
-
-        function clearEditor() {
-            if (confirm('Clear all content?')) {
-                editor.innerHTML = '';
-                updateWordCount();
+        function saveSelection() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                lastSelectionRange = selection.getRangeAt(0);
             }
         }
 
-        function updateWordCount() {
-            const text = editor.innerText.trim();
-            const words = text ? text.split(/\s+/).length : 0;
-            wordCountDisplay.innerText = `Words: ${words}`;
+        editor.addEventListener('keyup', saveSelection);
+        editor.addEventListener('mouseup', saveSelection);
+        editor.addEventListener('focus', saveSelection);
+
+        function format(event, command, value = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            editor.focus();
+
+            // Restore selection if it was lost
+            if (lastSelectionRange) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(lastSelectionRange);
+            }
+
+            document.execCommand(command, false, value);
+
+            // Update selection reference after change
+            saveSelection();
         }
 
-        // Auto-update word count on typing
-        editor.addEventListener('input', updateWordCount);
+        function toggleStylePanel() {
+            const panel = document.getElementById('style-panel');
+            panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+        }
 
-        // Download Functionality
-        downloadBtn.addEventListener('click', () => {
-            const content = editor.innerHTML;
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
-                "xmlns:w='urn:schemas-microsoft-com:office:word' " +
-                "xmlns='http://www.w3.org/TR/REC-html40'>" +
-                "<head><meta charset='utf-8'><title>Export HTML to Doc</title></head><body>";
-            const footer = "</body></html>";
-            const sourceHTML = header + content + footer;
+        function setPageSize(size) {
+            editor.classList.remove('page-a4', 'page-a3');
+            if (size !== 'none') {
+                editor.classList.add(size);
+            }
+        }
 
-            const blob = new Blob(['\ufeff', sourceHTML], {
-                type: 'application/msword'
-            });
+        function downloadDoc() {
+            // Clone the editor to clean up export content
+            const exportEditor = editor.cloneNode(true);
 
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'document.doc';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Remove any interim text spans from the export
+            const interim = exportEditor.querySelector('.interim-text');
+            if (interim) interim.remove();
+
+            const content = exportEditor.innerHTML.trim();
+
+            if (!content || content === '<br>') {
+                showToast("Editor is empty. Speak or type something first!");
+                return;
+            }
+
+            try {
+                // Build a valid Word HTML structure
+                const header = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                          xmlns:w='urn:schemas-microsoft-com:office:word' 
+                          xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head>
+                        <meta charset='utf-8'>
+                        <style>
+                            body { font-family: 'Calibri', sans-serif; line-height: 1.5; font-size: 11pt; }
+                            p { margin: 0 0 10pt 0; }
+                        </style>
+                    </head>
+                    <body>
+                        ${(() => {
+                        const searchVal = document.getElementById('topSearch').value.trim();
+                        return searchVal ? `<h2 style="color: #666; font-size: 14pt; border-bottom: 1px solid #eee; padding-bottom: 5pt; margin-bottom: 15pt;">Topic/Search: ${searchVal}</h2>` : '';
+                    })()}
+                        ${content}
+                    </body>
+                    </html>`;
+
+                const blob = new Blob(['\ufeff', header], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'voice-document.doc';
+                document.body.appendChild(a);
+                a.click();
+
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                showToast("Downloading Word Document...");
+            } catch (err) {
+                console.error("Export failed:", err);
+                showToast("Export failed. Please check console.");
+            }
+        }
+
+        // Text to Speech Functionality
+        const speakBtn = document.getElementById('speakBtn');
+        speakBtn.addEventListener('click', () => {
+            const text = editor.innerText.trim();
+            if (!text) {
+                showToast("Editor is empty!");
+                return;
+            }
+
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            // Match the voice language to the selected transcription language
+            utterance.lang = config.lang;
+            // Apply speed adjustment
+            utterance.rate = config.speakRate;
+
+            utterance.onstart = () => speakBtn.style.color = 'var(--primary-orange)';
+            utterance.onend = () => speakBtn.style.color = 'var(--text-muted)';
+
+            window.speechSynthesis.speak(utterance);
+            showToast("Reading editor content...");
         });
+
+        // Helper to show notifications
+        function showToast(msg) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
     </script>
 </body>
 
-</html> here i want update mobile view uppend issue fist hello say hello show good then i say welcome i want out put hello welcome now issue hello hello welcome output fix it 
+</html>
