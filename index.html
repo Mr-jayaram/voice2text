@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chili Piper - Voice Dashboard</title>
+    <title> Voice 2 Text</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -516,6 +516,38 @@
             display: none;
         }
 
+        .header-lang-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .header-lang-selector:hover {
+            border-color: var(--primary-orange);
+            background: #fff;
+        }
+
+        .header-lang-selector select {
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .header-lang-selector i {
+            font-size: 14px;
+            color: var(--primary-orange);
+        }
+
         .mobile-fab-styles,
         .mobile-menu-btn {
             display: none;
@@ -858,6 +890,13 @@
             <div class="style-toggle-btn" id="mobileStyleBtn">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
             </div>
+            <div class="header-lang-selector">
+                <i class="fa-solid fa-earth-americas"></i>
+                <select id="voiceLang">
+                    <option value="en-IN" selected>English (India)</option>
+                    <option value="ta-IN">Tamil (India)</option>
+                </select>
+            </div>
             <div style="flex: 1"></div>
             <div style="display: flex; align-items: center; gap: 20px;">
                 <!-- Moved Search to Top Nav -->
@@ -878,18 +917,10 @@
 
         <div class="content-layout">
             <!-- Middle Editor Section -->
-            <section class="main-editor-section">
-
-
-                <div class="message-card">
-
-
-
-
-                    <div id="editor" class="msg-body page-a4" contenteditable="true"
-                        data-placeholder="Start speaking or typing your document here..."></div>
-
-                </div>
+            <section class="main-editor-section" id="sheets-container"
+                style="display: flex; flex-direction: column; align-items: center; gap: 40px; padding-bottom: 200px;">
+                <div class="msg-body page-a4 editor-sheet" contenteditable="true"
+                    data-placeholder="Start speaking or typing your document here..."></div>
             </section>
 
             <!-- Right Dashboard Panel -->
@@ -1051,13 +1082,6 @@
                     value="stop voice">
             </div>
             <div class="settings-group">
-                <label class="settings-label">Recognition Language</label>
-                <select id="voiceLang" class="settings-input">
-                    <option value="en-IN" selected>English (India)</option>
-                    <option value="ta-IN">Tamil (India)</option>
-                </select>
-            </div>
-            <div class="settings-group">
                 <label class="settings-label">Done & Download Command (Speech)</label>
                 <input type="text" id="downloadCommandText" class="settings-input" placeholder="e.g., download file"
                     value="end voice download file">
@@ -1124,8 +1148,9 @@
     </div>
 
     <script>
-        // --- Core Logic (Voice + Editor) ---
-        const editor = document.getElementById('editor');
+        // --- Core Logic (Voice + Multi-Sheet Editor) ---
+        const sheetsContainer = document.getElementById('sheets-container');
+        let activeSheet = document.querySelector('.editor-sheet');
         const micBtn = document.getElementById('micBtn');
         const micText = micBtn.querySelector('span');
 
@@ -1175,12 +1200,58 @@
             if (e.target == guideModal) guideModal.style.display = 'none';
         };
 
-        // --- New Sheet & Default Text Logic ---
-        const newSheetBtn = document.getElementById('newSheet');
+        // Multi-Sheet & Pagination Logic
+        function createNewSheet() {
+            const lastSheet = sheetsContainer.lastElementChild;
+            const newSheet = document.createElement('div');
+
+            // Sync size classes from last sheet
+            newSheet.className = lastSheet.className;
+            newSheet.contentEditable = "true";
+            newSheet.setAttribute('data-placeholder', "Continuing on new sheet...");
+
+            sheetsContainer.appendChild(newSheet);
+            newSheet.focus();
+            activeSheet = newSheet;
+
+            // Re-apply focus listener
+            newSheet.addEventListener('focus', () => activeSheet = newSheet);
+
+            showToast("New sheet added automatically.");
+            return newSheet;
+        }
+
+        function checkPagination(el) {
+            // A4 height is roughly 1122px (297mm) at 96dpi
+            // We use scrollHeight vs offsetHeight for accurate overflow detection
+            if (el.scrollHeight > el.offsetHeight + 5) {
+                // If it's already full, but we are at the end, jump to new sheet
+                // Or if we just typed a character that caused overflow
+                createNewSheet();
+            }
+        }
+
+        sheetsContainer.addEventListener('input', (e) => {
+            if (e.target.classList.contains('editor-sheet')) {
+                checkPagination(e.target);
+            }
+        });
+
+        sheetsContainer.addEventListener('focusin', (e) => {
+            if (e.target.classList.contains('editor-sheet')) {
+                activeSheet = e.target;
+            }
+        });
 
         function initializeEmptySheet(useTemplate = false) {
-            // Clear editor content so placeholder shows
-            editor.innerHTML = "";
+            // Clear all sheets and keep only one
+            sheetsContainer.innerHTML = "";
+            const firstSheet = document.createElement('div');
+            firstSheet.className = "msg-body page-a4 editor-sheet";
+            firstSheet.contentEditable = "true";
+            firstSheet.setAttribute('data-placeholder', "Start speaking or typing your document here...");
+            sheetsContainer.appendChild(firstSheet);
+            activeSheet = firstSheet;
 
             if (useTemplate) {
                 const now = new Date();
@@ -1192,11 +1263,11 @@
                     <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
                     <p><br></p>
                 `;
-                editor.innerHTML = template;
+                activeSheet.innerHTML = template;
                 showToast("Template applied.");
             }
 
-            // Verbal Announcement (Communication)
+            // Verbal Announcement
             const greeting = useTemplate ? "New document template ready." : "Dashboard cleared. Ready for your voice.";
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(greeting);
@@ -1204,20 +1275,12 @@
             utterance.rate = config.speakRate;
             window.speechSynthesis.speak(utterance);
 
-            if (!useTemplate) showToast("Editor ready.");
-
-            // Focus editor
-            editor.focus();
+            activeSheet.focus();
         }
 
-        newSheetBtn.onclick = () => {
-            initializeEmptySheet(true); // Default to template on button click
-        };
-
         window.addEventListener('load', () => {
-            // Small delay to ensure everything is ready
             setTimeout(() => {
-                if (editor.innerText.trim() === "") {
+                if (!activeSheet || activeSheet.innerText.trim() === "") {
                     initializeEmptySheet(false);
                 }
             }, 500);
@@ -1231,14 +1294,19 @@
             config.downloadCommand = document.getElementById('downloadCommandText').value.toLowerCase();
             config.speakRate = parseFloat(document.getElementById('speakRate').value);
 
-            // Update recognition language immediately
-            if (recognition) {
-                recognition.lang = config.lang;
-            }
-
+            // Recognition updates handled by change event now
             settingsModal.style.display = 'none';
             showToast("Settings saved!");
         };
+
+        // Header Language Change Handler
+        document.getElementById('voiceLang').addEventListener('change', (e) => {
+            config.lang = e.target.value;
+            if (recognition) {
+                recognition.lang = config.lang;
+            }
+            showToast(`Language switched to: ${e.target.selectedOptions[0].text}`);
+        });
 
         // Live Speed Value Update
         document.getElementById('speakRate').addEventListener('input', (e) => {
@@ -1316,14 +1384,15 @@
                     interimSpan.className = 'interim-text';
 
                     const selection = window.getSelection();
-                    // Fix: Ensure we only insert into the editor, not the mic area
-                    if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+                    // Fix: Ensure we only insert into an editor sheet, not the mic area
+                    if (selection.rangeCount > 0 && selection.anchorNode.parentElement.closest('.editor-sheet')) {
                         const range = selection.getRangeAt(0);
                         range.insertNode(interimSpan);
                         range.setStartAfter(interimSpan);
                         range.setEndAfter(interimSpan);
                     } else {
-                        editor.appendChild(interimSpan);
+                        // If no selection, use the active sheet (where cursor was last)
+                        activeSheet.appendChild(interimSpan);
                     }
                 }
 
@@ -1357,7 +1426,6 @@
 
                     // Command: Default Text / Empty Sheet
                     if (lowerTranscript === 'default text' || lowerTranscript === 'here empty sheet') {
-                        editor.innerHTML = "";
                         initializeEmptySheet();
                         return;
                     }
@@ -1371,12 +1439,12 @@
 
                     // Command: Move to Top
                     if (lowerTranscript === 'recording top add') {
+                        const firstSheet = sheetsContainer.firstElementChild;
                         if (interimSpan) {
-                            editor.prepend(interimSpan);
-                            // Reset selection to the start for future results
+                            firstSheet.prepend(interimSpan);
                             const selection = window.getSelection();
                             const range = document.createRange();
-                            range.setStart(editor, 0);
+                            range.setStart(firstSheet, 0);
                             range.collapse(true);
                             selection.removeAllRanges();
                             selection.addRange(range);
@@ -1480,14 +1548,14 @@
                             return;
                         }
 
-                        // Get all text content before current position
-                        const editorText = editor.innerText.trim();
+                        // Get text content from active sheet only for simple deletion
+                        const editorText = activeSheet.innerText.trim();
                         const words = editorText.split(/\s+/);
                         const lastWord = words[words.length - 1] ? words[words.length - 1].toLowerCase().replace(/[.,!?;:]/g, '') : '';
 
                         if (lastWord === targetWord) {
-                            // Find the last text node to avoid destroying formatting elsewhere
-                            const walk = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+                            // Find the last text node in the active sheet
+                            const walk = document.createTreeWalker(activeSheet, NodeFilter.SHOW_TEXT, null, false);
                             let node, lastTextNode;
                             while (node = walk.nextNode()) {
                                 if (node !== interimSpan && node.textContent.trim()) lastTextNode = node;
@@ -1523,12 +1591,16 @@
                         if (interimSpan && interimSpan.parentNode) {
                             interimSpan.parentNode.insertBefore(finalNode, interimSpan);
                             interimSpan.innerText = '';
+
+                            // Check if the current sheet overflowed after adding text
+                            checkPagination(interimSpan.parentElement.closest('.editor-sheet'));
                         } else {
-                            editor.appendChild(finalNode);
+                            activeSheet.appendChild(finalNode);
+                            checkPagination(activeSheet);
                         }
 
                         // Scroll to bottom if needed
-                        editor.scrollTop = editor.scrollHeight;
+                        activeSheet.scrollTop = activeSheet.scrollHeight;
                     }
                 }
 
@@ -1558,9 +1630,9 @@
             }
         }
 
-        editor.addEventListener('keyup', saveSelection);
-        editor.addEventListener('mouseup', saveSelection);
-        editor.addEventListener('focus', saveSelection);
+        sheetsContainer.addEventListener('keyup', saveSelection);
+        sheetsContainer.addEventListener('mouseup', saveSelection);
+        sheetsContainer.addEventListener('focus', saveSelection);
 
         function format(event, command, value = null) {
             if (event) {
@@ -1568,7 +1640,7 @@
                 event.stopPropagation();
             }
 
-            editor.focus();
+            activeSheet.focus();
 
             // Restore selection if it was lost
             if (lastSelectionRange) {
@@ -1578,6 +1650,9 @@
             }
 
             document.execCommand(command, false, value);
+
+            // Check for overflow after formatting
+            checkPagination(activeSheet);
 
             // Update selection reference after change
             saveSelection();
@@ -1589,24 +1664,28 @@
         }
 
         function setPageSize(size) {
-            editor.classList.remove('page-a4', 'page-a3');
-            if (size !== 'none') {
-                editor.classList.add(size);
-            }
+            document.querySelectorAll('.editor-sheet').forEach(sheet => {
+                sheet.classList.remove('page-a4', 'page-a3');
+                if (size !== 'none') {
+                    sheet.classList.add(size);
+                }
+            });
         }
 
         function downloadDoc() {
-            // Clone the editor to clean up export content
-            const exportEditor = editor.cloneNode(true);
+            // Clone the whole container to export all sheets
+            const sheets = Array.from(document.querySelectorAll('.editor-sheet'));
+            let combinedContent = "";
 
-            // Remove any interim text spans from the export
-            const interim = exportEditor.querySelector('.interim-text');
-            if (interim) interim.remove();
+            sheets.forEach(sheet => {
+                const clone = sheet.cloneNode(true);
+                const interim = clone.querySelector('.interim-text');
+                if (interim) interim.remove();
+                combinedContent += clone.innerHTML + '<div style="page-break-after:always;"></div>';
+            });
 
-            const content = exportEditor.innerHTML.trim();
-
-            if (!content || content === '<br>') {
-                showToast("Editor is empty. Speak or type something first!");
+            if (!combinedContent.trim() || combinedContent.replace(/<[^>]*>?/gm, '').trim() === "") {
+                showToast("Document is empty!");
                 return;
             }
 
@@ -1626,9 +1705,9 @@
                     <body>
                         ${(() => {
                         const searchVal = document.getElementById('topSearch').value.trim();
-                        return searchVal ? `<h2 style="color: #666; font-size: 14pt; border-bottom: 1px solid #eee; padding-bottom: 5pt; margin-bottom: 15pt;">Topic/Search: ${searchVal}</h2>` : '';
+                        return searchVal ? `<h2 style="color: #666; font-size: 14pt; border-bottom: 1px solid #eee; padding-bottom: 5pt; margin-bottom: 15pt;">Topic: ${searchVal}</h2>` : '';
                     })()}
-                        ${content}
+                        ${combinedContent}
                     </body>
                     </html>`;
 
@@ -1656,8 +1735,8 @@
         // Text to Speech Functionality
         const speakBtn = document.getElementById('speakBtn');
         speakBtn.addEventListener('click', () => {
-            const text = editor.innerText.trim();
-            if (!text) {
+            const allText = Array.from(document.querySelectorAll('.editor-sheet')).map(s => s.innerText).join(' ');
+            if (!allText.trim()) {
                 showToast("Editor is empty!");
                 return;
             }
@@ -1665,7 +1744,7 @@
             // Cancel any ongoing speech
             window.speechSynthesis.cancel();
 
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance = new SpeechSynthesisUtterance(allText);
             // Match the voice language to the selected transcription language
             utterance.lang = config.lang;
             // Apply speed adjustment
@@ -1675,7 +1754,7 @@
             utterance.onend = () => speakBtn.style.color = 'var(--text-muted)';
 
             window.speechSynthesis.speak(utterance);
-            showToast("Reading editor content...");
+            showToast("Reading document content...");
         });
 
         // Helper to show notifications
