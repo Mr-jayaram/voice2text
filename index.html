@@ -935,6 +935,10 @@
                         <button class="btn-no"
                             style="width: 100%; border-color: var(--primary-orange); color: var(--primary-orange);"
                             onclick="downloadDoc()"><i class="fa-solid fa-file-word"></i> Export to Word</button>
+                        <button class="btn-no"
+                            style="width: 100%; border-color: #8b5cf6; color: #8b5cf6; margin-top: 10px;"
+                            onclick="convertTextToBamini()"><i class="fa-solid fa-language"></i> Convert to
+                            Bamini</button>
                     </div>
 
                     <!-- Moved Actions & Styles -->
@@ -1770,7 +1774,38 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
+
+        // Convert to Bamini feature
+        function convertTextToBamini() {
+            if (typeof convertUnicodeToBamini !== 'function') {
+                showToast("Converter library not loaded.");
+                return;
+            }
+
+            document.querySelectorAll('.editor-sheet').forEach(sheet => {
+                // We use tree walker to convert only text nodes, keeping formatting (bold, italic) intact
+                const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT, null, false);
+                const textNodes = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    textNodes.push(node);
+                }
+
+                textNodes.forEach(n => {
+                    const originalText = n.nodeValue;
+                    if (originalText.trim()) {
+                        n.nodeValue = convertUnicodeToBamini(originalText);
+                    }
+                });
+
+                // Set the font family to Bamini to display it correctly
+                sheet.style.fontFamily = "Bamini, 'Inter', sans-serif";
+            });
+
+            showToast("Converted Unicode text to Bamini format.");
+        }
     </script>
+    <script src="unicode_to_bamini.js"></script>
 </body>
 
 </html>
